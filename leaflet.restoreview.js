@@ -1,6 +1,6 @@
 (function() {
     var RestoreViewMixin = {
-        restoreView: function () {
+        restoreView: function (version) {
             if (!storageAvailable('localStorage')) {
                 return false;
             }
@@ -13,7 +13,8 @@
                     var view = {
                         lat: this.getCenter().lat,
                         lng: this.getCenter().lng,
-                        zoom: this.getZoom()
+                        zoom: this.getZoom(),
+                        version: version,
                     };
                     storage['mapView'] = JSON.stringify(view);
                 }, this);
@@ -23,8 +24,13 @@
             var view = storage['mapView'];
             try {
                 view = JSON.parse(view || '');
-                this.setView(L.latLng(view.lat, view.lng), view.zoom, true);
-                return true;
+                if (view.version === version) {
+                    this.setView(L.latLng(view.lat, view.lng), view.zoom, true);
+                    return true;
+                } else {
+                    storage.removeItem('mapView');
+                    return false;
+                }
             }
             catch (err) {
                 return false;
